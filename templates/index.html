@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head></head>
+	<body>
+		<form action="/" method="POST">
+			<input name="tag" />
+			<input type="submit" />
+		</form>
+		<div>
+			{{ range .Results.Products.Product }}
+				<div>
+					<span>{{ .Name }}</span>
+					{{ range .Offers.Offer }}
+						<img src="{{ .ImageUrlLarge }}">
+						{{ .PriceRetail }} | {{ .PriceMerchant }}
+					{{ else }}
+						<span>No Offers</span>
+					{{ end }}
+				</div>
+			{{ end }}
+		</div>
+	</body>
+</html>
