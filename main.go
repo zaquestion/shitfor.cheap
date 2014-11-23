@@ -32,7 +32,6 @@ func main() {
 			fmt.Println(rakuten.Status)
 
 		}
-
 	})
 
 	n := negroni.Classic()
@@ -40,7 +39,57 @@ func main() {
 	n.Run(":3000")
 }
 
-type RakutenProduct struct {
+type SlimRakutenProduct struct {
+	Filters struct {
+		Filter []interface{} `json:"filter"`
+	} `json:"filters"`
+	Message    string `json:"message"`
+	Parameters []struct {
+		Kind  string `json:"kind"`
+		Name  string `json:"name"`
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"parameters"`
+	Results struct {
+		Deals    struct{} `json:"deals"`
+		Products struct {
+			Count   float64 `json:"count"`
+			Product []struct {
+				Brand         float64 `json:"brand"`
+				Category      float64 `json:"category"`
+				Description   string  `json:"description"`
+				ID            float64 `json:"id"`
+				ImageUrlLarge string  `json:"image_url_large"`
+				Name          string  `json:"name"`
+				OfferCount    float64 `json:"offer_count"`
+				Offers        struct {
+					Count float64 `json:"count"`
+					Offer []struct {
+						Condition     string  `json:"condition"`
+						CurrencyIso   string  `json:"currency_iso"`
+						Description   string  `json:"description"`
+						ID            float64 `json:"id"`
+						ImageUrlLarge string  `json:"image_url_large"`
+						Merchant      float64 `json:"merchant"`
+						Name          string  `json:"name"`
+						PriceMerchant float64 `json:"price_merchant"`
+						PriceRetail   float64 `json:"price_retail"`
+						Sku           string  `json:"sku"`
+						URL           string  `json:"url"`
+					} `json:"offer"`
+				} `json:"offers"`
+				PriceMax         float64 `json:"price_max"`
+				PriceMaxMerchant float64 `json:"price_max_merchant"`
+				PriceMin         float64 `json:"price_min"`
+				PriceMinMerchant float64 `json:"price_min_merchant"`
+			} `json:"product"`
+		} `json:"products"`
+	} `json:"results"`
+	Session string  `json:"session"`
+	Status  float64 `json:"status"`
+}
+
+type FullRakutenProduct struct {
 	Filters struct {
 		Filter []interface{} `json:"filter"`
 	} `json:"filters"`
