@@ -8,15 +8,15 @@
 		</form>
 		<div>
 			{{ range .Results.Products.Product }}
-				<div>
-					<span>{{ .Name }}</span>
-					{{ range .Offers.Offer }}
-						<img src="{{ .ImageUrlLarge }}">
-						{{ .PriceRetail }} | {{ .PriceMerchant }}
-					{{ else }}
-						<span>No Offers</span>
-					{{ end }}
-				</div>
+				{{ if .Offers.Count }}
+					<div>
+						<div>{{ .Name }}</div>
+						{{ range .Offers.Offer }}
+							<a href="{{ .URL }}"><img src="{{ .ImageUrlLarge }}"></a>
+							{{ .PriceRetail }} | {{ .PriceMerchant }}
+						{{ end }}
+					</div>
+				{{ end }}
 			{{ end }}
 		</div>
 	</body>

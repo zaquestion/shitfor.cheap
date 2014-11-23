@@ -11,6 +11,8 @@ import (
 	"github.com/codegangsta/negroni"
 )
 
+var apiString = fmt.Sprintf("http://api.popshops.com/v3/products.json?account=%s&catalog=%s", "ao7k0w59fbqag2stztxwdrod6", "db46yl7pq0tgy9iumgj88bfj7")
+
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +24,9 @@ func main() {
 		} else {
 			r.ParseForm()
 			fmt.Println("tag:", r.Form["tag"])
-			resp, err := http.Get("http://api.popshops.com/v3/products.json?account=ao7k0w59fbqag2stztxwdrod6&catalog=db46yl7pq0tgy9iumgj88bfj7&keyword=" + r.FormValue("tag"))
+			request := fmt.Sprintf("%s&keyword=%s&results_per_page=100", apiString, r.FormValue("tag"))
+			fmt.Println(request)
+			resp, err := http.Get(request)
 
 			var rakuten SlimRakutenProduct
 			body, err := ioutil.ReadAll(resp.Body)
