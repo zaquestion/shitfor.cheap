@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
@@ -18,7 +21,15 @@ func main() {
 			r.ParseForm()
 			fmt.Println("tag:", r.Form["tag"])
 			http.ServeFile(w, r, "./static/index.html")
-			//resp, err = http.Get("http://api.popshops.com/v3/products.json?account=ao7k0w59fbqag2stztxwdrod6&catalog=db46yl7pq0tgy9iumgj88bfj7&keyword=" + r.FormValue("tag"))
+			resp, err := http.Get("http://api.popshops.com/v3/products.json?account=ao7k0w59fbqag2stztxwdrod6&catalog=db46yl7pq0tgy9iumgj88bfj7&keyword=" + r.FormValue("tag"))
+
+			var rakuten RakutenProduct
+			body, err := ioutil.ReadAll(resp.Body)
+			err = json.Unmarshal(body, &rakuten)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(rakuten.Status)
 
 		}
 
