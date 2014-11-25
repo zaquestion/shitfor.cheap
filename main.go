@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
+
+	"github.com/zaqthefreshman/Shitfor_Cheap/rakuten"
 )
 
 var apiString = fmt.Sprintf("http://api.popshops.com/v3/products.json?account=%s&catalog=%s", "ao7k0w59fbqag2stztxwdrod6", "db46yl7pq0tgy9iumgj88bfj7")
@@ -16,31 +17,42 @@ var apiString = fmt.Sprintf("http://api.popshops.com/v3/products.json?account=%s
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("asdf")
+		fmt.Printf("[INFO] %s Request to /\n", r.Method)
 
-		if r.Method == "GET" {
-			fmt.Println("get")
-			http.ServeFile(w, r, "./static/index.html")
-		} else {
+		var data TemplateData
+
+		if r.Method == "POST" {
 			r.ParseForm()
 			fmt.Println("tag:", r.Form["tag"])
-			request := fmt.Sprintf("%s&keyword=%s&results_per_page=100", apiString, r.FormValue("tag"))
+			request := fmt.Sprintf("%s&keyword=%s&results_per_page=100&include_discounts=true", apiString, r.FormValue("tag"))
 			fmt.Println(request)
 			resp, err := http.Get(request)
 
-			var rakuten SlimRakutenProduct
-			body, err := ioutil.ReadAll(resp.Body)
-			err = json.Unmarshal(body, &rakuten)
+			var apiResponse rakuten.FullRakutenResponse
+			body, _ := ioutil.ReadAll(resp.Body)
+			err = json.Unmarshal(body, &apiResponse)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
+				w.WriteHeader(500)
+				fmt.Fprintf(w, "<html><head><title>Shit For Cheap!</title></head><body>Error:<br>%s</body></html>", err)
+				return
 			}
-			t, err := template.ParseFiles("./templates/index.html")
-			if err != nil {
-				log.Fatal(err)
-			}
-			t.Execute(w, rakuten)
-
+			RakutenToTemplate(&apiResponse, &data)
+		} else if r.Method != "GET" {
+			// Method Not Allowed
+			w.WriteHeader(405)
+			w.Write([]byte("<html><head><title>Shit For Cheap!</title></head><body>Error: Method Not Allowed</body></html>"))
+			return
 		}
+
+		// Render template
+		t, err := template.ParseFiles("./templates/index.html")
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+		t.Execute(w, data)
 	})
 
 	n := negroni.Classic()
@@ -48,136 +60,52 @@ func main() {
 	n.Run(":3000")
 }
 
-type SlimRakutenProduct struct {
-	Filters struct {
-		Filter []interface{} `json:"filter"`
-	} `json:"filters"`
-	Message    string `json:"message"`
-	Parameters []struct {
-		Kind  string `json:"kind"`
-		Name  string `json:"name"`
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"parameters"`
-	Results struct {
-		Deals    struct{} `json:"deals"`
-		Products struct {
-			Count   float64 `json:"count"`
-			Product []struct {
-				Brand         float64 `json:"brand"`
-				Category      float64 `json:"category"`
-				Description   string  `json:"description"`
-				ID            float64 `json:"id"`
-				ImageUrlLarge string  `json:"image_url_large"`
-				Name          string  `json:"name"`
-				OfferCount    float64 `json:"offer_count"`
-				Offers        struct {
-					Count float64 `json:"count"`
-					Offer []struct {
-						Condition     string  `json:"condition"`
-						CurrencyIso   string  `json:"currency_iso"`
-						Description   string  `json:"description"`
-						ID            float64 `json:"id"`
-						ImageUrlLarge string  `json:"image_url_large"`
-						Merchant      float64 `json:"merchant"`
-						Name          string  `json:"name"`
-						PriceMerchant float64 `json:"price_merchant"`
-						PriceRetail   float64 `json:"price_retail"`
-						Sku           string  `json:"sku"`
-						URL           string  `json:"url"`
-					} `json:"offer"`
-				} `json:"offers"`
-				PriceMax         float64 `json:"price_max"`
-				PriceMaxMerchant float64 `json:"price_max_merchant"`
-				PriceMin         float64 `json:"price_min"`
-				PriceMinMerchant float64 `json:"price_min_merchant"`
-			} `json:"product"`
-		} `json:"products"`
-	} `json:"results"`
-	Session string  `json:"session"`
-	Status  float64 `json:"status"`
+type TemplateData struct {
+	Keyword string
+	Offers  []Offer
 }
 
-type FullRakutenProduct struct {
-	Filters struct {
-		Filter []interface{} `json:"filter"`
-	} `json:"filters"`
-	Message    string `json:"message"`
-	Parameters []struct {
-		Kind  string `json:"kind"`
-		Name  string `json:"name"`
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"parameters"`
-	Resources struct {
-		Brands struct {
-			Brand []interface{} `json:"brand"`
-			Count float64       `json:"count"`
-		} `json:"brands"`
-		Categories struct {
-			Context struct {
-				Category []struct {
-					ID    float64 `json:"id"`
-					Name  string  `json:"name"`
-					Order float64 `json:"order"`
-				} `json:"category"`
-			} `json:"context"`
-			Matches struct {
-				Category []struct {
-					Count float64 `json:"count"`
-					ID    float64 `json:"id"`
-					Name  string  `json:"name"`
-				} `json:"category"`
-			} `json:"matches"`
-		} `json:"categories"`
-		DealTypes struct {
-			Count    float64 `json:"count"`
-			DealType []struct {
-				Count float64 `json:"count"`
-				ID    float64 `json:"id"`
-				Name  string  `json:"name"`
-			} `json:"deal_type"`
-		} `json:"deal_types"`
-		Merchants struct {
-			Count    float64       `json:"count"`
-			Merchant []interface{} `json:"merchant"`
-		} `json:"merchants"`
-	} `json:"resources"`
-	Results struct {
-		Deals    struct{} `json:"deals"`
-		Products struct {
-			Count   float64 `json:"count"`
-			Product []struct {
-				Brand         float64 `json:"brand"`
-				Category      float64 `json:"category"`
-				Description   string  `json:"description"`
-				ID            float64 `json:"id"`
-				ImageUrlLarge string  `json:"image_url_large"`
-				Name          string  `json:"name"`
-				OfferCount    float64 `json:"offer_count"`
-				Offers        struct {
-					Count float64 `json:"count"`
-					Offer []struct {
-						Condition     string  `json:"condition"`
-						CurrencyIso   string  `json:"currency_iso"`
-						Description   string  `json:"description"`
-						ID            float64 `json:"id"`
-						ImageUrlLarge string  `json:"image_url_large"`
-						Merchant      float64 `json:"merchant"`
-						Name          string  `json:"name"`
-						PriceMerchant float64 `json:"price_merchant"`
-						PriceRetail   float64 `json:"price_retail"`
-						Sku           string  `json:"sku"`
-						URL           string  `json:"url"`
-					} `json:"offer"`
-				} `json:"offers"`
-				PriceMax         float64 `json:"price_max"`
-				PriceMaxMerchant float64 `json:"price_max_merchant"`
-				PriceMin         float64 `json:"price_min"`
-				PriceMinMerchant float64 `json:"price_min_merchant"`
-			} `json:"product"`
-		} `json:"products"`
-	} `json:"results"`
-	Session string  `json:"session"`
-	Status  float64 `json:"status"`
+type Offer struct {
+	// product specific
+	Brand              string
+	Category           string
+	PriceMax           float64
+	PriceMaxMerchant   float64
+	PriceMin           float64
+	PriceMinMerchant   float64
+	ProductDescription string
+	ProductID          float64
+	ProductImageUrl    string
+	ProductName        string
+	// best-offer specific
+	Condition        string
+	CurrencyIso      string
+	Merchant         string
+	PriceMerchant    float64
+	PriceRetail      float64
+	Sku              string
+	URL              string
+	OfferDescription string
+	OfferID          float64
+	OfferImageUrl    string
+	OfferName        string
+}
+
+func RakutenToTemplate(rakutenProduct *rakuten.FullRakutenResponse, data *TemplateData) {
+	//resources := &rakutenProduct.Resources
+	for _, product := range rakutenProduct.Results.Products.Product {
+		if product.Offers.Count > 0 {
+			offer := product.Offers.Offer[0]
+			data.Offers = append(data.Offers, Offer{
+				ProductDescription: product.Description,
+				ProductID:          product.ID,
+				ProductImageUrl:    product.ImageUrlLarge,
+				ProductName:        product.Name,
+				Condition:          offer.Condition,
+				PriceMerchant:      offer.PriceMerchant,
+				URL:                offer.URL,
+				PriceRetail:        offer.PriceRetail,
+			})
+		}
+	}
 }

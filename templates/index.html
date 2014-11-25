@@ -3,20 +3,18 @@
 	<head></head>
 	<body>
 		<form action="/" method="POST">
-			<input name="tag" />
+			<input name="tag" value="{{ .Keyword }}"/>
 			<input type="submit" />
 		</form>
 		<div>
-			{{ range .Results.Products.Product }}
-				{{ if .Offers.Count }}
-					<div>
-						<div>{{ .Name }}</div>
-						{{ range .Offers.Offer }}
-							<a href="{{ .URL }}"><img src="{{ .ImageUrlLarge }}"></a>
-							{{ .PriceRetail }} | {{ .PriceMerchant }}
-						{{ end }}
-					</div>
-				{{ end }}
+			{{ range .Offers }}
+				<div style="display: inline-block; width: 300px; height: 300px;">
+					<div>{{ .ProductName }}</div>
+					<a href="{{ .URL }}"><img src="{{ .ProductImageUrl }}" width="200" height="200"></a>
+					{{ .PriceMerchant }} | {{ .PriceRetail }}
+				</div>
+			{{ else }}
+				Search for a keyword!
 			{{ end }}
 		</div>
 	</body>
