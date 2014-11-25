@@ -9,7 +9,7 @@ import (
 
 	"github.com/codegangsta/negroni"
 
-	"github.com/zaqthefreshman/Shitfor_Cheap/rakuten"
+	"github.com/zaqthefreshman/Shitfor.Cheap/rakuten"
 )
 
 var apiString = fmt.Sprintf("http://api.popshops.com/v3/products.json?account=%s&catalog=%s", "ao7k0w59fbqag2stztxwdrod6", "db46yl7pq0tgy9iumgj88bfj7")
