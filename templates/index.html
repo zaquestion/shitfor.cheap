@@ -8,11 +8,13 @@
 		</form>
 		<div>
 			{{ range .Offers }}
+			<a href="{{ .URL }}">
 				<div style="display: inline-block; width: 300px; height: 300px;">
 					<div>{{ .ProductName }}</div>
-					<a href="{{ .URL }}"><img src="{{ .ProductImageUrl }}" width="200" height="200"></a>
+					<img src="{{ .ProductImageUrl }}" width="200" height="200"><br />
 					{{ .PriceMerchant }} | {{ .PriceRetail }}
 				</div>
+			</a>
 			{{ else }}
 				Search for a keyword!
 			{{ end }}
